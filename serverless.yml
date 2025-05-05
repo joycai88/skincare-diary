@@ -1,0 +1,17 @@
+service: lambda-chatgpt
+plugins: []
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-2
+  versionFunctions: false
+  environment:
+    OPENAI_KEY: ${env:OPENAI_KEY}
+
+
+functions:
+  getjoke:
+    handler: src/handler.main
+    url: true
