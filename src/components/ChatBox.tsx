@@ -19,10 +19,12 @@ function ChatBox() {
       sender: 'user'
     }];
     setMessage(newMessages);
-
+    
     const response = await fetch(functionUrl, {
       method: 'POST',
-      body: JSON.stringify({ subject: currentValue })
+      //headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: newMessages }),
+      redirect: "follow"
     });
 
     const reply = await response.text();
@@ -34,7 +36,7 @@ function ChatBox() {
   }
 
   return <main>
-    <h1> Pirate Chat Bot </h1>
+    <h1> A Personal Dermatologist </h1>
     {message.map((message, index) => (
       <p key={index} className={`message ${message.sender}`}>{message.text}</p>
     ))}
