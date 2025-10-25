@@ -2,10 +2,12 @@ import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import "./App.css";
 
 //pages
-import ChatPage from "./pages/chatPage";
+import ChatPage from "./pages/ChatPage";
 import ProductPage from "./pages/ProductPage";
 import ReviewPage from "./pages/ReviewPage";
+import AccountPage from "./pages/AccountPage";
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
 function App() {
   const navigate = useNavigate();
@@ -88,6 +90,8 @@ function App() {
         <Route path="/products" element={<ProductPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/register" element={<SignupPage />} />
       </Routes>
     </div>
   );
