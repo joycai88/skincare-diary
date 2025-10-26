@@ -1,5 +1,6 @@
 import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import "./App.css";
+import AuthRoute from "./components/AuthRoute";
 
 //pages
 import ChatPage from "./pages/ChatPage";
@@ -13,7 +14,7 @@ function App() {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate("/login");
+    navigate("/account");
   };
 
   return (
@@ -90,7 +91,7 @@ function App() {
         <Route path="/products" element={<ProductPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/account" element={<AccountPage />} />
+        <Route path="/account" element={<AuthRoute><AccountPage /></AuthRoute>} />
         <Route path="/register" element={<SignupPage />} />
       </Routes>
     </div>
