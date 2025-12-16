@@ -1,20 +1,24 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 
+interface NewProduct {
+    name: string;
+    brand: string;
+    type: string;
+    description: string;
+    price: string;
+    count: number;
+    imageUrl: string;
+}
+
 interface NewProductProps {
-    newProduct: {
-        name: string;
-        brand: string;
-        type: string;
-        description: string;
-        price: string;
-        count: number;
-        imageUrl: string;
-      };
+    newProduct: NewProduct;
+    setNewProduct: React.Dispatch<React.SetStateAction<NewProduct>>;
     onClose: () => void;
+    addProduct: (newProduct : NewProduct) => Promise<void>;
   }
 
-function NewProduct({ onClose, newProduct }: NewProductProps) {
+function NewProduct({ onClose, newProduct, setNewProduct, addProduct }: NewProductProps) {
     const [imagePreview, setImagePreview] = useState(null);
 
     return (
@@ -25,15 +29,15 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
               <button
                 onClick={() => {
                   onClose();
-                //   setNewProduct({
-                //     name: '',
-                //     brand: '',
-                //     type: 'cleanser',
-                //     description: '',
-                //     price: '',
-                //     purchaseCount: 0,
-                //     imageUrl: ''
-                //   });
+                  setNewProduct({
+                    name: '',
+                    brand: '',
+                    type: 'cleanser',
+                    description: '',
+                    price: '',
+                    count: 0,
+                    imageUrl: ''
+                  });
                   setImagePreview(null);
                 }}
                 className="p-1 hover:bg-[#68a691] rounded transition-colors"
@@ -73,7 +77,7 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
                   <input
                     type="text"
                     value={newProduct.name}
-                    //onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                     className="w-full bg-[#efc7c2]/50 border border-[#68a691]/30 rounded-lg px-4 py-3 text-[#694f5d] focus:outline-none focus:border-[#694f5d] transition-colors"
                     placeholder="e.g., 24h Hydrating Lotion"
                   />
@@ -84,7 +88,7 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
                   <input
                     type="text"
                     value={newProduct.brand}
-                    //onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
+                    onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
                     className="w-full bg-[#efc7c2]/50 border border-[#68a691]/30 rounded-lg px-4 py-3 text-[#694f5d] focus:outline-none focus:border-[#694f5d] transition-colors"
                     placeholder="e.g., CeraVe"
                   />
@@ -96,7 +100,7 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
                   <label className="block text-[#694f5d] mb-2 text-sm">Type</label>
                   <select
                     value={newProduct.type}
-                    //onChange={(e) => setNewProduct({...newProduct, type: e.target.value})}
+                    onChange={(e) => setNewProduct({...newProduct, type: e.target.value})}
                     className="w-full bg-[#efc7c2]/50 border border-[#68a691]/30 rounded-lg px-4 py-3 text-[#694f5d] focus:outline-none focus:border-[#694f5d] transition-colors"
                   >
                     <option value="cleanser">Cleanser</option>
@@ -116,7 +120,7 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
                     type="number"
                     step="0.01"
                     value={newProduct.price}
-                    //onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                    onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
                     className="w-full bg-[#efc7c2]/50 border border-[#68a691]/30 rounded-lg px-4 py-3 text-[#694f5d] focus:outline-none focus:border-[#694f5d] transition-colors"
                     placeholder="0.00"
                   />
@@ -149,7 +153,7 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
                 <input
                   type="number"
                   value={newProduct.count}
-                  //onChange={(e) => setNewProduct({...newProduct, purchaseCount: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setNewProduct({...newProduct, count: parseInt(e.target.value) || 0})}
                   className="w-full bg-[#efc7c2]/50 border border-[#68a691]/30 rounded-lg px-4 py-3 text-[#694f5d] focus:outline-none focus:border-[#694f5d] transition-colors"
                   placeholder="0"
                 />
@@ -158,25 +162,38 @@ function NewProduct({ onClose, newProduct }: NewProductProps) {
             
             <div className="flex gap-3 mt-6">
               <button
-                // onClick={() => {
-                //   setShowAddModal(false);
-                //   setNewProduct({
-                //     name: '',
-                //     brand: '',
-                //     type: 'cleanser',
-                //     description: '',
-                //     price: '',
-                //     purchaseCount: 0,
-                //     imageUrl: ''
-                //   });
-                //   setImagePreview(null);
-                // }}
+                onClick={() => {
+                  onClose();
+                  setNewProduct({
+                    name: '',
+                    brand: '',
+                    type: 'cleanser',
+                    description: '',
+                    price: '',
+                    count: 0,
+                    imageUrl: ''
+                  });
+                  setImagePreview(null);
+                }}
                 className="flex-1 px-4 py-3 bg-[#68a691]/80 hover:bg-[#68a691] text-white rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
-                //onClick={handleAddProduct}
+                onClick={async () => {
+                    await addProduct(newProduct);
+                    onClose();
+                    setNewProduct({
+                        name: '',
+                        brand: '',
+                        type: 'cleanser',
+                        description: '',
+                        price: '',
+                        count: 0,
+                        imageUrl: ''
+                      });
+                      setImagePreview(null);
+                }}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-[#efc7c2] to-[#694f5d] hover:from-[#694f5d] text-white rounded-lg transition-all shadow-lg shadow-[#efc7c2]/30"
               >
                 Add Product

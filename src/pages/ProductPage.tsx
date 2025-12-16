@@ -1,12 +1,24 @@
 import { Filter, Plus } from "lucide-react";
 import { useState } from "react";
 import NewProduct from "../components/NewProduct";
+import { addDoc, collection } from "firebase/firestore";
+import { db, auth } from "../config/firebase";
+
+type ProductInput = {
+    name: string;
+    brand: string;
+    type: string;
+    description: string;
+    price: string;
+    count: number;
+    imageUrl: string;
+  };
 
 function ProductPage() {
-    const [filterType, setFilterType] = useState('date-added');
+    //const [filterType, setFilterType] = useState('date-added');
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newProduct, setNewProduct] = useState({
+    const [newProduct, setNewProduct] = useState<ProductInput>({
         name: '',
         brand: '',
         type: 'cleanser',
@@ -16,19 +28,38 @@ function ProductPage() {
         imageUrl: ''
     });
 
-    const applyFilter = (products, type) => {
-        let sorted = [...products];
+    // const applyFilter = (products, type) => {
+    //     let sorted = [...products];
 
-        if (type == 'date-added') {
-            sorted.sort((a,b) => b.createdAt - a.createdAt);
-        } 
+    //     if (type == 'date-added') {
+    //         sorted.sort((a,b) => b.createdAt - a.createdAt);
+    //     } 
+    // }
+
+    // const handleFilterChange = (type) => {
+    //     setFilterType(type);
+    //     applyFilter(products, type);
+    //     setShowFilterMenu(false);
+    // };
+
+    // Add product to database
+    const handleAddProduct = async (newProduct : ProductInput) => {
+
+        const user = auth.currentUser;
+
+        if (!user) {
+          console.warn("Must be signed in");
+          return;  
+        }
+
+        const userId = user.uid;
+
+        if (!newProduct.name) return;
+
+        await addDoc(collection(db, 'products', userId, 'myProducts'), {
+            ...newProduct
+        });
     }
-
-    const handleFilterChange = (type) => {
-        setFilterType(type);
-        applyFilter(products, type);
-        setShowFilterMenu(false);
-    };
 
     return(
     <div>
@@ -51,7 +82,7 @@ function ProductPage() {
               
               {showFilterMenu && (
                 <div className="absolute right-0 mt-2 w-56 bg-[#bfd3c1] border border-[#68a691]/30 rounded-lg shadow-2xl shadow-[#68a691]/20 overflow-hidden z-10">
-                  <button
+                  {/* <button
                     onClick={() => handleFilterChange('date-added')}
                     className={`w-full text-left px-4 py-3 hover:bg-[#68a691] transition-colors ${
                       filterType === 'date-added' ? 'text-black bg-[#68a691]/50' : 'text-[#694f5d]'
@@ -74,7 +105,7 @@ function ProductPage() {
                     }`}
                   >
                     Most Repurchased
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
@@ -107,7 +138,9 @@ function ProductPage() {
 
       {showAddModal && <NewProduct
         onClose={() => setShowAddModal(false)}
+        setNewProduct={setNewProduct}
         newProduct={newProduct} 
+        addProduct={handleAddProduct}
         />}
     </div>
     );
