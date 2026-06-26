@@ -1,21 +1,15 @@
 import { Filter, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NewProduct from "../components/NewProduct";
-import { addDoc, collection } from "firebase/firestore";
+import ProductCard from "../components/ProductCard";
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, where } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
-
-type ProductInput = {
-    name: string;
-    brand: string;
-    type: string;
-    description: string;
-    price: string;
-    count: number;
-    imageUrl: string;
-  };
+import type { Product, ProductInput } from "../types/product";
 
 function ProductPage() {
-    //const [filterType, setFilterType] = useState('date-added');
+    const [products, setProducts] = useState<Product[]>([]);
+    const [filterType, setFilterType] = useState('date-added');
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [newProduct, setNewProduct] = useState<ProductInput>({
@@ -28,19 +22,59 @@ function ProductPage() {
         imageUrl: ''
     });
 
-    // const applyFilter = (products, type) => {
-    //     let sorted = [...products];
+    useEffect(() => {
+        loadProducts();
+    }, []);
 
-    //     if (type == 'date-added') {
-    //         sorted.sort((a,b) => b.createdAt - a.createdAt);
-    //     } 
-    // }
+    const applyFilter = (products: Product[], type: string) => {
+        let sorted = [...products];
 
-    // const handleFilterChange = (type) => {
-    //     setFilterType(type);
-    //     applyFilter(products, type);
-    //     setShowFilterMenu(false);
-    // };
+        if (type == 'date-added') {
+            sorted.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
+        } 
+    }
+
+    const handleFilterChange = (type: string) => {
+        setFilterType(type);
+        applyFilter(products, type);
+        setShowFilterMenu(false);
+    };
+    
+
+    //Loads products to page
+    const loadProducts = async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+          console.warn("Must be signed in");
+          return;  
+        }
+
+        const userId = user.uid;
+
+        let productsQuery = query(
+            collection(db, 'products', userId, 'myProducts'),
+            where('userId', '==', userId)
+        );
+
+        // Apply ordering based on filter
+        if (filterType === 'date-added') {
+            productsQuery = query(productsQuery, orderBy('createdAt', 'desc'));
+        } else if (filterType === 'most-repurchased') {
+            productsQuery = query(productsQuery, orderBy('count', 'desc'));
+        }
+            
+        const snapshot = await getDocs(productsQuery);
+        let prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+            
+        // Sort by type if needed (client-side)
+        if (filterType === 'product-type') {
+            prods.sort((a, b) => a.type.localeCompare(b.type));
+        }
+            
+        setProducts(prods);
+        setFilteredProducts(prods);
+    }
 
     // Add product to database
     const handleAddProduct = async (newProduct : ProductInput) => {
@@ -57,9 +91,21 @@ function ProductPage() {
         if (!newProduct.name) return;
 
         await addDoc(collection(db, 'products', userId, 'myProducts'), {
-            ...newProduct
+            ...newProduct,
+            userId,
+            createdAt: serverTimestamp()
         });
+
+        await loadProducts();
     }
+
+    const handleDeleteProduct = async (productId: string) => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        await deleteDoc(doc(db, 'products', user.uid, 'myProducts', productId));
+        await loadProducts();
+    };
 
     return(
     <div>
@@ -82,7 +128,7 @@ function ProductPage() {
               
               {showFilterMenu && (
                 <div className="absolute right-0 mt-2 w-56 bg-[#bfd3c1] border border-[#68a691]/30 rounded-lg shadow-2xl shadow-[#68a691]/20 overflow-hidden z-10">
-                  {/* <button
+                  <button
                     onClick={() => handleFilterChange('date-added')}
                     className={`w-full text-left px-4 py-3 hover:bg-[#68a691] transition-colors ${
                       filterType === 'date-added' ? 'text-black bg-[#68a691]/50' : 'text-[#694f5d]'
@@ -105,7 +151,7 @@ function ProductPage() {
                     }`}
                   >
                     Most Repurchased
-                  </button> */}
+                  </button>
                 </div>
               )}
             </div>
@@ -122,18 +168,18 @@ function ProductPage() {
         </div>
 
         {/* Products Grid */}
-        {/* <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.length === 0 ? (
             <div className="col-span-full text-center py-20">
-              <Image className="text-slate-700 mx-auto mb-4" size={64} />
+              <div className="text-slate-700 mx-auto mb-4 w-16 h-16" />
               <p className="text-slate-500 text-lg">No products yet. Add your first product to get started!</p>
             </div>
           ) : (
             filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} onDelete={handleDeleteProduct} />
             ))
           )}
-        </div> */}
+        </div>
       </div>
 
       {showAddModal && <NewProduct

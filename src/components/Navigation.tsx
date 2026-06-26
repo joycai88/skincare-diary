@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import { User } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebase";
 
 function Navigation() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("Routine");
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setIsLoggedIn(!!user);
+        });
+        return unsubscribe;
+    }, []);
   
     return (
     <div className="bg-[#FFE5D4] min-h-screen px-8 py-5">
@@ -56,8 +66,7 @@ function Navigation() {
                 </div>
                 <button
                   onClick={() => {
-                    navigate("/login");
-                    setActiveTab("Login");
+                    navigate(isLoggedIn ? "/account" : "/login");
                   }}
                   className="p-3 transition-colors"
                 >
